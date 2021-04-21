@@ -7,64 +7,135 @@ require('classes/Movimentacao.class.php');
 
 class Main {
 
+	private $objUsuario;
+	private $objFabricante;
+	private $objEstoque;
+	private $objMovimentacao;
+
 	public function __construct(){
 
-		
+		//apenas teste
 		echo "\n\n--- COMEÇO DO PROGRAMA ---\n\n";
 
-		$objUsuario = new Usuario;
-		$objFabricante = new Fabricante;
-		$objEstoque = new Estoque;
-		$objMovimentacao = new Movimentacao;
+		$this->objUsuario = new Usuario;
+		$this->objFabricante = new Fabricante;
+		$this->objEstoque = new Estoque;
+		$this->objMovimentacao = new Movimentacao;
 
-		switch ($_SERVER['argv'][1]) {  
+		$this->verificaSeExisteArg(1);
+
+		$this->executaOperacao( $_SERVER['argv'][1]);
+		
+	}
+
+	private function executaOperacao(string $operacao){
+
+		switch ($operacao) {  //pega o segundo argumento passado pelo usuário via
+										//linha de comando (o primeiro argumento é 
+										//o próprio arquivo)
 
 			case 'gravaUsuario':
 
-				$this->gravaUsuario($objUsuario);
+				$this->gravaUsuario();
 				break;
 
 			case 'editaUsuario':
 
-				$this->editaUsuario($objUsuario);
+				$this->editaUsuario();
 				break;				
 			
+			case 'listaUsuario':
+
+				$this->listaUsuario();
+				break;	
+
+			case 'apagaUsuario':
+
+				$this->apagaUsuario();
+				break;	
+
 			default:
 				
 				echo "\nERRO: Não existe a funcionalidade {$_SERVER['argv'][1]}\n";				
 		}
-		
 	}
 
-	public function editaUsuario($objUsuario){
+	private function apagaUsuario(){
 
 		$dados = $this->tratarDados();
 
-		$objUsuario->setDados($dados);
+		$this->objUsuario->setDados($dados);
 
-		if( $objUsuario->gravarDados() ){
+		if ( $this->objUsuario->delete() ){
+
+			echo "\nUsuário apagado com sucesso!\n";
+
+		} else {
+
+			echo "\nErro ao tentar apagar o usuário, você enviou o ID?\n";
+		}
+
+	}
+
+	private function listaUsuario(){
+
+		$lista = $this->objUsuario->getAll();
+
+		foreach ($lista as $usuario) {
+			
+			echo "{$usuario['id']}\t{$usuario['cpf']}\t{$usuario['nome']}\n";
+		}
+
+	}
+
+	private function editaUsuario(){
+
+		$dados = $this->tratarDados();
+
+		$this->objUsuario->setDados($dados);
+
+		if( $this->objUsuario->gravarDados() ){
 
 			echo "\nUsuário editado com sucesso!\n";
 		}
-
 	}
 
-	public function gravaUsuario($objUsuario){
+	private function gravaUsuario(){
 
 		$dados = $this->tratarDados();
 
-		$objUsuario->setDados($dados);
+		$this->objUsuario->setDados($dados);
 
-		if( $objUsuario->gravarDados() ){
+		if( $this->objUsuario->gravarDados() ){
 
 			echo "\nUsuário gravado com sucesso!\n";
 		}
-
 	}
 
-	public function tratarDados(){
+	private function verificaSeExisteArg(int $numArg){
 
-		$args = explode( ',', $_SERVER['argv'][2]); 
+		if ( !isset($_SERVER['argv'][$numArg]) ) {
+
+			if ( $numArg == 1 ) { 
+
+				$msg = "para utilizar o programa digite: php estoque.php [operação]";
+
+			} else {
+
+				$msg = "para utilizar o programa digite: php estoque.php [operação] [dado=valor,dado2=valor2,...,dadoN=valorN]";
+			}
+
+			echo "\n\nErro: $msg\n\n";
+
+			exit();
+		}
+	}
+
+	private function tratarDados(){
+
+		$this->verificaSeExisteArg(2);
+
+		$args = explode( ',', $_SERVER['argv'][2]); //dados passados pelo usuário na linha de 	comando
 
 		foreach ($args as $valor) {
 			
